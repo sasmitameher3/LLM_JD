@@ -1,0 +1,95 @@
+import os
+import time
+from docx import Document
+from llmware.prompts import Prompt
+from llmware.models import ModelCatalog
+
+# Function to read text from a .docx file
+def read_docx(file_path):
+    doc = Document(file_path)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
+
+def fast_start_prompting  (model_name):
+
+    """ This is the main example script - it loads the question list, loads the model and executes the prompts. """
+
+    t0 = time.time()
+
+    # load in the 'hello world' test questions above
+    #test_list = hello_world_questions()
+
+    print(f"\n > Loading Model: {model_name}...")
+
+    prompter = Prompt().load_model(model_name)
+
+    t1 = time.time()
+    print(f"\n > Model {model_name} load time: {t1-t0} seconds")
+ 
+    file_path = r'C:\DataScience-TechERG\LLM_JD\Input_Files\Java_P4_JD.docx'
+
+    if os.path.exists(file_path) and file_path.endswith('.docx'):
+    # Read the document content
+       doc_content = read_docx(file_path)
+    
+    # Define the prompt
+       prompt = "Extract Mandatory or Primary Skills or Skill Set "
+       context = doc_content
+
+       start_time = time.time()
+
+       response = prompter.prompt_main(prompt, context=context, prompt_name="default_with_context", temperature=0.3)
+
+       time_taken = round(time.time() - start_time, 2)
+       
+       llm_response = response.get('llm_response', 'Response not found')
+       file_name = os.path.basename(file_path)
+       print(f"File: {file_name}")
+       print(f"Model: {model_name}")
+       print(f"LLM Response: {llm_response}")
+       print(f"Time taken: {time_taken} seconds\n")
+    
+    else:
+        print(f"The file {file_path} does not exist or is not a .docx file.")
+    return 0
+
+if __name__ == "__main__":
+
+    
+    llm_models = ModelCatalog().list_generative_models()
+
+    #   if you only want to see the local models
+    llm_local_models = ModelCatalog().list_generative_local_models()
+
+    #   to see only the open source models
+    llm_open_source_models = ModelCatalog().list_open_source_models()
+
+    #   we will print out the local models
+    #for i, models in enumerate(llm_local_models):
+        #print("models: ", i, models["model_name"], models["model_family"])
+
+    generative_models = [  "llmware/bling-1b-0.1",
+                           "llmware/bling-tiny-llama-v0", 
+                           "slim-summary-tool",
+                           "dragon-yi-answer-tool",
+                           "llmware/slim-extract",
+                           "llmware/bling-falcon-1b-0.1",
+                           "llmware/bling-cerebras-1.3b-0.1",
+                           "llmware/slim-summary-tiny",
+                           "llmware/slim-extract-tiny",             
+                           "llmware/slim-summary",
+                           ]
+    
+
+    #   by default, we will select a gguf model requiring no additional imports
+    model_name = generative_models[0]
+
+    #   to swap in a gpt-4 openai model - uncomment these two lines
+    #   model_name = "gpt-4"
+    #   os.environ["USER_MANAGED_OPENAI_API_KEY"] = "<insert-your-openai-key>"
+
+    fast_start_prompting(model_name)
+
+  
